@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using static Verdict;
 
 public class CaseManager : MonoBehaviour
 {
+    public static CaseManager Instance;
+
     public enum TrialStage { None, Information, Analysis, Verdict, Retrial }
     public TrialStage stage;
     public List<Case> cases;
@@ -13,17 +16,27 @@ public class CaseManager : MonoBehaviour
     public Evidence currentEvidence;
     public int maxLies;
     public int lies;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    public VerdictType currentSentencing;
+    public VerdictType retrialSentencing;
+    public int sentenceLength;
+
     void Start()
     {
+        Instance = this;
+        EstablishCase();
 
     }
 
-    // Update is called once per frame
-    void Update()
+    public void EstablishCase()
     {
-
+        ChooseCase();
+        EstablishLyingOdds();
+        EstablishClaims();
+        ChooseEvidence();
+        stage = TrialStage.Information;
     }
+
 
     public void ChooseCase()
     {
@@ -70,14 +83,19 @@ public class CaseManager : MonoBehaviour
         switch(scale) 
         {
             case Defendant.LyingScale.VeryLow:
+                ApplyLiesToClaims(1);
                 break;
             case Defendant.LyingScale.Low:
+                ApplyLiesToClaims(5);
                 break;
             case Defendant.LyingScale.Neutral:
+                ApplyLiesToClaims(15);
                 break;
             case Defendant.LyingScale.High:
+                ApplyLiesToClaims(25);
                 break;
             case Defendant.LyingScale.VeryHigh:
+                ApplyLiesToClaims(40);
                 break;
         }
     }
@@ -144,6 +162,43 @@ public class CaseManager : MonoBehaviour
             }
         }
     }
-    
+
+    public void MakeClaim(PlayerChoices playerChoice, Evidence evidence)
+    {
+        Verdict currentVerdict = currentCase.DetermineVerdict(playerChoice, evidence);
+        ApplyVerdict(currentVerdict);
+    }
+
+    public void ApplyVerdict(Verdict verdict)
+    {
+        if (stage != TrialStage.Retrial)
+        {
+            if (verdict.verdictType == Verdict.VerdictType.Guilty)
+            {
+                currentSentencing = Verdict.VerdictType.Guilty;
+                sentenceLength += Random.Range(verdict.minimumSentence, verdict.maximumSentence);
+            }
+            else
+            {
+                currentSentencing = Verdict.VerdictType.Innocent;
+            }
+        }
+        else
+        {
+            if (currentSentencing == Verdict.VerdictType.Guilty && currentSentencing == Verdict.VerdictType.Guilty)
+            {
+                sentenceLength += Random.Range(verdict.minimumSentence, verdict.maximumSentence);
+            }
+            else if (currentSentencing == Verdict.VerdictType.Guilty && currentSentencing == Verdict.VerdictType.Innocent)
+            {
+                sentenceLength -= Random.Range(verdict.minimumSentence, verdict.maximumSentence);
+                if (sentenceLength <= 0)
+                {
+                    currentSentencing = Verdict.VerdictType.Innocent;
+                }
+            }
+        }
+    }
+
 
 }

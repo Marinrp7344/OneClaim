@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Case", menuName = "Scriptable Objects/Case")]
@@ -8,10 +9,12 @@ public class Case : ScriptableObject
     public List<Claim> claims;
     public List<Evidence> evidence;
     public List<PlayerChoices> playerChoices;
+    public List<Verdict> verdicts;
 
-    public void DecideVerdict(PlayerChoices playerChoice, Evidence evidence)
+    public Verdict DetermineVerdict(PlayerChoices playerChoice, Evidence evidence)
     {
-
+        Verdict result = verdicts.FirstOrDefault(v => v.playerChoiceIndex == playerChoice.index && v.evidenceIndex == evidence.evidenceIndex);
+        return result;
     }
 }
 
@@ -27,6 +30,7 @@ public class Claim
     public Evidence associatedEvidence;
 }
 
+[System.Serializable]
 public class AdmissionClaims
 {
     public enum ClaimType { None, Admit, Deny }
@@ -36,20 +40,22 @@ public class AdmissionClaims
 
 }
 
+[System.Serializable]
 public class PlayerChoices
 {
     public int index;
     public string description;
 }
 
+[System.Serializable] 
 public class Verdict
 {
     public int playerChoiceIndex;
     public int evidenceIndex;
     public int minimumSentence;
     public int maximumSentence;
-    public string verdict;
-
+    public enum VerdictType { None, Guilty, Innocent };
+    public VerdictType verdictType;
 
 }
 
