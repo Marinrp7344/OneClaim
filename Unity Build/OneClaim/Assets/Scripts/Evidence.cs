@@ -7,5 +7,4 @@ public class Evidence : ScriptableObject
     public string evidenceName;
     public Sprite evidenceSprite;
     public bool active;
-    
 }
